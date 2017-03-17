@@ -23,6 +23,7 @@ GEM
     nokogiri (1.7.0.1)
       mini_portile2 (~> 2.1.0)
     ntlm-http (0.1.1)
+    oj (2.18.3)
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.2)
@@ -33,6 +34,7 @@ PLATFORMS
 
 DEPENDENCIES
   mechanize
+  oj
 
 BUNDLED WITH
    1.14.6

@@ -1,14 +1,16 @@
 require 'optparse'
 require 'mechanize'
 require 'csv'
+require 'fileutils'
+require 'oj'
 
 class GreeCrawler
   attr_reader :agent
 
-  def initialize
+  def initialize(email: nil, pass: nil)
     @agent = Mechanize.new
     @agent.user_agent_alias = 'iPhone'
-    login_with
+    login_with(email, pass)
     set_apps_cookie
   end
 
@@ -39,7 +41,7 @@ class GreeCrawler
     current_page = start_page
     result = visit_ranking_page(event_id, idol_id, current_page)
     ranker_list = []
-    while current_page < 300
+    while current_page < 50
       ranker_list += result
 
       if ranker_list.count > 99
@@ -93,19 +95,23 @@ params = ARGV.getopts('f:s:', 'event_id:')
 event_id = params['event_id']
 series_name = params['s']
 
-crawler = GreeCrawler.new
 current = Time.now.strftime('%Y%m%d-%H%M')
-thread_count = 13
+auths = Oj.load(open('confidential.json'))['accounts']
+thread_count = auths.count
 
 groups = Array.new(thread_count).map.with_index do |_, index|
   (14..50).select { |id| (id % thread_count) == index }
 end
 
+FileUtils.mkdir_p(current) unless FileTest.exist?(current)
+
 ths = groups.map.with_index do |thread_group, index|
   Thread.new do
+    auth = auths[index]
+    crawler = GreeCrawler.new(email: auth['email'], pass: auth['pass'])
     puts "========== Thread #{index} START ==========="
     thread_group.each do |idol_id|
-      crawler.crawl_and_output("#{current}_tys_#{'%02d' % idol_id}_ranking.tsv", event_id, idol_id, 1)
+      crawler.crawl_and_output("#{current}/tys_#{'%02d' % idol_id}_ranking.tsv", event_id, idol_id, 1)
     end
     puts "========== Thread #{index} FINISH =========="
   end
