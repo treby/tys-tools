@@ -96,6 +96,7 @@ event_id = params['event_id']
 series_name = params['s']
 
 current = Time.now.strftime('%Y%m%d-%H%M')
+out_dir = "#{File.dirname(__FILE__)}/outputs/#{current}"
 auths = Oj.load(open('confidential.json'))['accounts']
 thread_count = auths.count
 
@@ -103,7 +104,7 @@ groups = Array.new(thread_count).map.with_index do |_, index|
   (14..50).select { |id| (id % thread_count) == index }
 end
 
-FileUtils.mkdir_p(current) unless FileTest.exist?(current)
+FileUtils.mkdir_p(out_dir) unless FileTest.exist?(out_dir)
 
 ths = groups.map.with_index do |thread_group, index|
   Thread.new do
@@ -111,7 +112,7 @@ ths = groups.map.with_index do |thread_group, index|
     crawler = GreeCrawler.new(email: auth['email'], pass: auth['pass'])
     puts "========== Thread #{index} START ==========="
     thread_group.each do |idol_id|
-      crawler.crawl_and_output("outputs/#{current}/tys_#{'%02d' % idol_id}_ranking.tsv", event_id, idol_id, 1)
+      crawler.crawl_and_output("#{out_dir}/tys_#{'%02d' % idol_id}_ranking.tsv", event_id, idol_id, 1)
     end
     puts "========== Thread #{index} FINISH =========="
   end
