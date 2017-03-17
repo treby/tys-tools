@@ -39,7 +39,7 @@ class GreeCrawler
     current_page = start_page
     result = visit_ranking_page(event_id, idol_id, current_page)
     ranker_list = []
-    while result.any?
+    while current_page < 300
       ranker_list += result
 
       if ranker_list.count > 99
@@ -48,7 +48,7 @@ class GreeCrawler
         end
         ranker_list = []
       end
-      sleep 0.2
+      sleep 0.1
       current_page += 1
       result = visit_ranking_page(event_id, idol_id, current_page)
     end
@@ -63,8 +63,8 @@ class GreeCrawler
   def visit_ranking_page(event_id = nil, idol_id = nil, page_num = nil)
     ranking_page = "http://imas.gree-apps.net/app/index.php/event/#{event_id}/ranking/general?page=%d&idol=%d"
 
-    url = ranking_page%(page_num idol_id)
-    puts "page-#{page_num} : #{url}"
+    url = ranking_page % [page_num, idol_id]
+    puts "page-#{page_num}(#{idol_id}) : #{url}"
 
     rankers = []
     @agent.get(url) do |page|
@@ -94,7 +94,21 @@ event_id = params['event_id']
 series_name = params['s']
 
 crawler = GreeCrawler.new
+current = Time.now.strftime('%Y%m%d-%H%M')
+thread_count = 13
 
-(14..50).each do |idol_id|
-  crawler.crawl_and_output("#{series_name}_ranking.tsv", event_id, idol_id, 1)
+groups = Array.new(thread_count).map.with_index do |_, index|
+  (14..50).select { |id| (id % thread_count) == index }
 end
+
+ths = groups.map.with_index do |thread_group, index|
+  Thread.new do
+    puts "========== Thread #{index} START ==========="
+    thread_group.each do |idol_id|
+      crawler.crawl_and_output("#{current}_tys_#{'%02d' % idol_id}_ranking.tsv", event_id, idol_id, 1)
+    end
+    puts "========== Thread #{index} FINISH =========="
+  end
+end
+
+ths.each(&:join)
