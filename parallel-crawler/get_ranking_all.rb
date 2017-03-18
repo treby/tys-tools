@@ -41,7 +41,7 @@ class GreeCrawler
     current_page = start_page
     result = visit_ranking_page(event_id, idol_id, current_page)
     ranker_list = []
-    while current_page < 50
+    while current_page < 51
       ranker_list += result
 
       if ranker_list.count > 99
