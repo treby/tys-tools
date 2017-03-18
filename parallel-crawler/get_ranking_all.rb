@@ -66,7 +66,9 @@ class GreeCrawler
     ranking_page = "http://imas.gree-apps.net/app/index.php/event/#{event_id}/ranking/general?page=%d&idol=%d"
 
     url = ranking_page % [page_num, idol_id]
-    puts "page-#{page_num}(#{idol_id}) : #{url}"
+    if page_num % 10 == 0
+      puts "idol:#{idol_id} page-#{page_num} : #{url}"
+    end
 
     rankers = []
     @agent.get(url) do |page|
@@ -112,7 +114,9 @@ ths = groups.map.with_index do |thread_group, index|
     crawler = GreeCrawler.new(email: auth['email'], pass: auth['pass'])
     puts "========== Thread #{index} START ==========="
     thread_group.each do |idol_id|
+      puts "Start Idol #{idol_id} (Thread #{index})"
       crawler.crawl_and_output("#{out_dir}/tys_#{'%02d' % idol_id}_ranking.tsv", event_id, idol_id, 1)
+      puts "Finish Idol #{idol_id} (Thread #{index})"
     end
     puts "========== Thread #{index} FINISH =========="
   end
