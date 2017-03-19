@@ -29,7 +29,7 @@ def ajust_space(text, length)
   "#{text + (' ' * ws_count)}"
 end
 
-idol_points = CSV.open(Dir.glob(File.dirname(__FILE__) + '/outputs/*.csv').last).to_a.transpose.map{ |arr| arr.shift; arr.map(&:to_i) }[1..-1]
+idol_points = CSV.open(Dir.glob(File.dirname(__FILE__) + '/outputs/*.csv').sort.last).to_a.transpose.map{ |arr| arr.shift; arr.map(&:to_i) }[1..-1]
 idol_rankings = (14..50).map{ |n| Rubimas.find(n) }.zip(idol_points).map(&:flatten)
 
 idol_summaries = idol_rankings.map do |idol_rank|
