@@ -53,8 +53,8 @@ lines = idol_summaries.each_slice(6).map do |line_idols|
   end
 end
 
-open('outputs/2017_tys_runners.txt', 'w') { |f| f.puts "TH@NK YOU for SMILE 枠#{reward}\n "; f.write lines.join("\n") }
-`convert -background white -fill black -font migu-1m-regular.ttf -pointsize 18 -interline-spacing 4 -kerning 0.5 label:@outputs/2017_tys_runners.txt outputs/2017_tys_runners.png`
+open('outputs/20170317_tys_runners.txt', 'w') { |f| f.puts "TH@NK YOU for SMILE 枠#{reward}\n "; f.write lines.join("\n") }
+`convert -background white -fill black -font migu-1m-regular.ttf -pointsize 18 -interline-spacing 4 -kerning 0.5 label:@outputs/20170317_tys_runners.txt outputs/20170317_tys_runners.png`
 
 if prev_tweet
   client = Twitter::REST::Client.new do |config|
@@ -63,5 +63,5 @@ if prev_tweet
     config.access_token        = ENV['TWITTER_ACCESS_TOKEN']
     config.access_token_secret = ENV['TWITTER_ACCESS_TOKEN_SECRET']
   end
-  client.update_with_media "ランナー分布を更新しました。\nhttp://mlborder.com/misc/runners?event=tys", open('outputs/2017_tys_runners.png'), in_reply_to_status_id: prev_tweet
+  client.update_with_media "ランナー分布を更新しました。\nhttp://mlborder.com/misc/runners?event=tys", open('outputs/20170317_tys_runners.png'), in_reply_to_status_id: prev_tweet
 end
