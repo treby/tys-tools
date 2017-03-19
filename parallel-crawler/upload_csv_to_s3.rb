@@ -5,8 +5,9 @@ Aws.config.update(
   region: 'ap-northeast-1'
 )
 
-source_file = Dir.glob(File.dirname(__FILE__) + '/outputs/*.csv').last
+source_file = Dir.glob(File.dirname(__FILE__) + '/outputs/*.csv').sort.last
 filename = File.basename(source_file)
+puts "uploading #{filename}"
 
 s3_client = Aws::S3::Client.new
 s3_client.put_object(bucket: 'mlborder', key: "runners/tys/#{filename}", body: open(source_file))
