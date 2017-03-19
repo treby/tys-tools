@@ -50,7 +50,7 @@ class GreeCrawler
         end
         ranker_list = []
       end
-      sleep 0.1
+      sleep 0.12
       current_page += 1
       result = visit_ranking_page(event_id, idol_id, current_page)
     end
@@ -71,22 +71,33 @@ class GreeCrawler
     end
 
     rankers = []
-    @agent.get(url) do |page|
-      lis = page.search('.list-bg > li')
-      next unless lis.any?
+    retry_count = 0
+    begin
+      @agent.get(url) do |page|
+        lis = page.search('.list-bg > li')
+        next unless lis.any?
 
-      rankers = lis.map do |li|
-        user_info_area = li.search('td.user-list-st').first
-        user_link = user_info_area.search('a').first
-        user_id = user_link ? user_link.attributes['href'].value.split('/').last.to_i : ENV['IMAS_ACCOUNT_ID'].to_i
+        rankers = lis.map do |li|
+          user_info_area = li.search('td.user-list-st').first
+          user_link = user_info_area.search('a').first
+          user_id = user_link ? user_link.attributes['href'].value.split('/').last.to_i : ENV['IMAS_ACCOUNT_ID'].to_i
 
-        user_info_list = user_info_area.search('br').map { |br| br.previous.text.strip }
-        user_name = user_info_list[1]
-        user_rank = user_info_list.first.match(/(\d+)位/)[1]
-        user_point = user_info_list[2].match(/([\d|,]+)/)[1].gsub(',', '').to_i
+          user_info_list = user_info_area.search('br').map { |br| br.previous.text.strip }
+          user_name = user_info_list[1]
+          user_rank = user_info_list.first.match(/(\d+)位/)[1]
+          user_point = user_info_list[2].match(/([\d|,]+)/)[1].gsub(',', '').to_i
 
 
-        { rank: user_rank, id: user_id, name: user_name, point: user_point }
+          { rank: user_rank, id: user_id, name: user_name, point: user_point }
+        end
+      end
+    rescue Mechanize::ResponseCodeError => e
+      if (retry_count += 1) < 3
+        puts "error occurred: #{e.inspect}, retrying..."
+        sleep 1
+        retry
+      else
+        raise
       end
     end
     rankers
