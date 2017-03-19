@@ -41,21 +41,20 @@ idol_summaries = idol_rankings.map do |idol_rank|
   summary << "200位: #{readable_unit(idol_rank[200])}"
   summary << "BMD(254位): #{readable_unit(idol_rank[254])}"
   summary << "300位: #{readable_unit(idol_rank[300])}"
-  summary << ""
-  summary << "+5(#{reward + 5}位)との差: #{readable_unit(idol_rank[reward] - idol_rank[reward + 5])}"
-  summary << "+10(#{reward + 10}位)との差: #{readable_unit(idol_rank[reward] - idol_rank[reward + 10])}"
-  summary << "+20(#{reward + 20}位)との差: #{readable_unit(idol_rank[reward] - idol_rank[reward + 20])}"
-  summary << ""
+  summary << "#{reward + 5}位(+5)との差: #{readable_unit(idol_rank[reward] - idol_rank[reward + 5])}"
+  summary << "#{reward + 10}位(+10)との差: #{readable_unit(idol_rank[reward] - idol_rank[reward + 10])}"
+  summary << "#{reward + 20}位(+20)との差: #{readable_unit(idol_rank[reward] - idol_rank[reward + 20])}"
   summary << ""
 end
 
-lines = idol_summaries.each_slice(4).map do |line_idols|
+lines = idol_summaries.each_slice(6).map do |line_idols|
   line_idols.transpose.map do |elm|
-    "#{elm.map { |li| ajust_space(li, 30) }.join}"
+    "#{elm.map { |li| ajust_space(li, 28) }.join}"
   end
 end
 
-`convert -background white -fill black -font migu-1m-regular.ttf -pointsize 18 -interline-spacing 4 -kerning 0.5 label:'#{lines.join("\n")}' outputs/2017_tys_runners.png`
+open('outputs/2017_tys_runners.txt', 'w') { |f| f.puts "TH@NK YOU for SMILE 枠#{reward}\n "; f.write lines.join("\n") }
+`convert -background white -fill black -font migu-1m-regular.ttf -pointsize 18 -interline-spacing 4 -kerning 0.5 label:@outputs/2017_tys_runners.txt outputs/2017_tys_runners.png`
 
 if prev_tweet
   client = Twitter::REST::Client.new do |config|
@@ -64,5 +63,5 @@ if prev_tweet
     config.access_token        = ENV['TWITTER_ACCESS_TOKEN']
     config.access_token_secret = ENV['TWITTER_ACCESS_TOKEN_SECRET']
   end
-  client.update "ランナー分布を更新しました。\nhttp://mlborder.com/misc/runners?event=tys", in_reply_to_status_id: prev_tweet
+  client.update_with_media "ランナー分布を更新しました。\nhttp://mlborder.com/misc/runners?event=tys", open('outputs/2017_tys_runners.png'), in_reply_to_status_id: prev_tweet
 end
