@@ -1,4 +1,4 @@
 .gree-account
 .twitter-secrets
-confidential.json
+credential.json
 /parallel-crawler/outputs/*

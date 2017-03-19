@@ -99,7 +99,7 @@ series_name = params['s']
 
 current = Time.now.strftime('%Y%m%d-%H%M')
 out_dir = "#{File.dirname(__FILE__)}/outputs/#{current}"
-auths = Oj.load(open('confidential.json'))['accounts']
+auths = Oj.load(open('credential.json'))['accounts']
 thread_count = auths.count
 
 groups = Array.new(thread_count).map.with_index do |_, index|
