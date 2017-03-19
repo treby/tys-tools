@@ -112,7 +112,7 @@ ths = groups.map.with_index do |thread_group, index|
   Thread.new do
     auth = auths[index]
     crawler = GreeCrawler.new(email: auth['email'], pass: auth['pass'])
-    puts "========== Thread #{index} START ==========="
+    puts "========== Thread #{index}(#{thread_group.join(',')}) START ==========="
     thread_group.each do |idol_id|
       puts "Start Idol #{idol_id} (Thread #{index})"
       crawler.crawl_and_output("#{out_dir}/tys_#{'%02d' % idol_id}_ranking.tsv", event_id, idol_id, 1)
