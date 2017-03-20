@@ -87,6 +87,9 @@ summaries += cliff_rankings.values.map do |ranking|
 end.transpose.map(&:join)
 summaries << ''
 
+tweets = []
+tweets << "ピックアップアイドルは#{cliff_rankings[[5,10,15,20].sample(1).first][0...3].map { |cl| cl[:idol].name.shorten }.join(',')}です。"
+
 open('outputs/20170317_tys_runners.txt', 'w') { |f| f.puts "TH@NK YOU for SMILE 枠#{reward}\n "; f.write summaries.join("\n") }
 `convert -background white -fill black -font migu-1m-regular.ttf -pointsize 18 -interline-spacing 4 -kerning 0.5 label:@outputs/20170317_tys_runners.txt outputs/20170317_tys_runners.png`
 
@@ -97,5 +100,5 @@ if prev_tweet
     config.access_token        = ENV['TWITTER_ACCESS_TOKEN']
     config.access_token_secret = ENV['TWITTER_ACCESS_TOKEN_SECRET']
   end
-  client.update_with_media "ランナー分布を更新しました。\nhttp://mlborder.com/misc/runners?event=tys", open('outputs/20170317_tys_runners.png'), in_reply_to_status_id: prev_tweet
+  client.update_with_media "ランナー分布の更新完了。#{tweets.join("\n")}\nhttp://mlborder.com/misc/runners?event=tys", open('outputs/20170317_tys_runners.png'), in_reply_to_status_id: prev_tweet
 end
