@@ -23,7 +23,17 @@ def readable_unit(number)
   after_digit <= 0 ? "#{num.to_i}#{unit}" : "#{format("%.#{after_digit}f", num)}#{unit}"
 end
 
-def ajust_space(text, length)
+def best_rankers(directory)
+  (14..50).each_with_object({}) do |idol_id, obj|
+    name = nil
+    CSV.open("#{File.dirname(__FILE__)}/#{directory}/tys_#{idol_id}_ranking.tsv", col_sep: "\t") do |csv|
+      name = csv.readline[2]
+    end
+    obj[idol_id] = name
+  end
+end
+
+def adjust_space(text, length)
   text_length = text.chars.map { |c| c.ascii_only? ? 1 : 2 }.sum
   ws_count = length - text_length
   "#{text + (' ' * ws_count)}"
@@ -48,27 +58,45 @@ idol_stats = idol_points.map do |idol_ranking_prev_ranking|
 end
 
 # ランキング
-target_ranks = [1, 10, 150, 200, 254, 300]
+target_ranks = [1, 150, 200, 254, 300]
 rankings = target_ranks.each_with_object({}) do |rank, obj|
   stats = idol_stats.map { |stats| { idol: stats[:idol], point: stats[:point_of].call(rank), velocity: stats[:velocity_of].call(rank) } }
   obj[rank] = stats.sort_by { |stat| stat[:point] }.reverse
 end
 
 # 向こう崖が小さい / 大きい
-target_diffs = [1, 5, 10, 15, 20, 25, 30]
+target_diffs = [1, 5, 10, 15, 20]
 cliff_rankings = target_diffs.each_with_object({}) do |diff, obj|
   stats = idol_stats.map { |stats| { idol: stats[:idol], diff: stats[:diff].call(diff) } }
   obj[diff] = stats.sort_by { |stat| stat[:diff] }
 end
 
+best_1_ranking = rankings.delete(1)
+best_1_summaries = []
+best_1_summaries << "アイドル横断全一ランキング(#{current_time.strftime('%Y/%m/%d %H:%M')})"
+best_1_summaries << " "
+best_1_dictionary = best_rankers(current_and_prev_csv_files.first.sub('.csv', ''))
+best_1_summaries += best_1_ranking.map.with_index(1) do |record, rank|
+  point_and_velocity = "#{readable_unit(record[:point])}(+#{readable_unit(record[:velocity])})"
+  "#{'%02d' % rank}位 #{record[:idol].name.to_s.ljust(5, '　')}: #{adjust_space(point_and_velocity, 18)} by #{best_1_dictionary[record[:idol].id]}"
+end
+
+filebase = 'outputs/20170317_tys_best'
+open("#{filebase}.txt", 'w') { |f| f.puts best_1_summaries.join("\n") }
+`convert -background white -fill black -font migu-1m-regular.ttf -pointsize 18 -interline-spacing 4 -kerning 0.5 label:@#{filebase}.txt #{filebase}.png`
+
 summaries = []
+summaries << "『TH@NK YOU for SMILE』 枠#{reward}"
+summaries << "集計期間: #{prev_time.strftime('%Y/%m/%d %H:%M')}〜#{current_time.strftime('%Y/%m/%d %H:%M')}"
+summaries << ''
+
 column_width = 35
 # アイドル横断ランキング(1, 150, 200, 254)
 summaries << '【アイドル横断ランキング】'
-summaries << target_ranks.map { |rank| ajust_space("ランキング#{rank}位", column_width) }.join
+summaries << target_ranks[1..-1].map { |rank| adjust_space("ランキング#{rank}位", column_width) }.join
 summaries += rankings.values.map do |ranking|
   ranking[0...20].map.with_index(1) do |record, rank|
-    ajust_space("#{'%02d' % rank}位 #{record[:idol].name.shorten.ljust(4, '　')}: #{readable_unit(record[:point])}(+#{readable_unit(record[:velocity])})", column_width)
+    adjust_space("#{'%02d' % rank}位 #{record[:idol].name.shorten.ljust(4, '　')}: #{readable_unit(record[:point])}(+#{readable_unit(record[:velocity])})", column_width)
   end
 end.transpose.map(&:join)
 summaries << ''
@@ -76,10 +104,10 @@ summaries << ''
 # 落差の小ささランキング → ボーダーが上がりやすい
 summaries << '【落差ランキング】'
 summaries << '[差が小さい]'
-summaries << target_diffs.map { |diff| ajust_space("+#{diff}(#{reward + diff}位)との差", 30) }.join
+summaries << target_diffs.map { |diff| adjust_space("+#{diff}(#{reward + diff}位)との差", 30) }.join
 summaries += cliff_rankings.values.map do |ranking|
   ranking[0...5].map.with_index(1) do |record, rank|
-    ajust_space("#{'%02d' % rank}位 #{record[:idol].name.to_s.ljust(5, '　')}: #{readable_unit(record[:diff])}", 30)
+    adjust_space("#{'%02d' % rank}位 #{record[:idol].name.to_s.ljust(5, '　')}: #{readable_unit(record[:diff])}", 30)
   end
 end.transpose.map(&:join)
 summaries << ''
@@ -87,10 +115,10 @@ summaries << ''
 
 # 落差の大きさランキング → ボーダーが下がりやすい
 summaries << '[差が大きい]'
-summaries << target_diffs.map { |diff| ajust_space("+#{diff}(#{reward + diff}位)との差", 30) }.join
+summaries << target_diffs.map { |diff| adjust_space("+#{diff}(#{reward + diff}位)との差", 30) }.join
 summaries += cliff_rankings.values.map do |ranking|
   ranking.reverse[0...5].map.with_index(1) do |record, rank|
-    ajust_space("#{'%02d' % rank}位 #{record[:idol].name.to_s.ljust(5, '　')}: #{readable_unit(record[:diff])}", 30)
+    adjust_space("#{'%02d' % rank}位 #{record[:idol].name.to_s.ljust(5, '　')}: #{readable_unit(record[:diff])}", 30)
   end
 end.transpose.map(&:join)
 summaries << ''
@@ -98,7 +126,7 @@ summaries << ''
 tweets = []
 tweets << "今回の注目アイドルは#{cliff_rankings[[5,10,15,20].sample(1).first][0...3].map { |cl| cl[:idol].name.shorten }.join('、')}です。"
 
-open('outputs/20170317_tys_runners.txt', 'w') { |f| f.puts "TH@NK YOU for SMILE 枠#{reward}\n集計期間: #{prev_time.strftime('%Y/%m/%d %H:%M')}〜#{current_time.strftime('%Y/%m/%d %H:%M')}\n "; f.write summaries.join("\n") }
+open('outputs/20170317_tys_runners.txt', 'w') { |f| f.write summaries.join("\n") }
 `convert -background white -fill black -font migu-1m-regular.ttf -pointsize 18 -interline-spacing 4 -kerning 0.5 label:@outputs/20170317_tys_runners.txt outputs/20170317_tys_runners.png`
 
 if prev_tweet
@@ -108,5 +136,9 @@ if prev_tweet
     config.access_token        = ENV['TWITTER_ACCESS_TOKEN']
     config.access_token_secret = ENV['TWITTER_ACCESS_TOKEN_SECRET']
   end
-  client.update_with_media "#{tweets.join("\n")}\nhttp://mlborder.com/misc/runners?event=tys", open('outputs/20170317_tys_runners.png'), in_reply_to_status_id: prev_tweet
+
+  media_ids = ['outputs/20170317_tys_best.png', 'outputs/20170317_tys_runners.png'].map do |media_path|
+    client.upload(File.new(media_path)).value
+  end
+  client.update "#{tweets.join("\n")}\nhttp://mlborder.com/misc/runners?event=tys", media_ids: media_ids.join(','), in_reply_to_status_id: prev_tweet
 end
