@@ -98,7 +98,7 @@ summaries << ''
 tweets = []
 tweets << "今回の注目アイドルは#{cliff_rankings[[5,10,15,20].sample(1).first][0...3].map { |cl| cl[:idol].name.shorten }.join('、')}です。"
 
-open('outputs/20170317_tys_runners.txt', 'w') { |f| f.puts "TH@NK YOU for SMILE 枠#{reward}\n期間: #{prev_time.strftime('%Y/%m/%d %H:%M')}〜#{current_time.strftime('%Y/%m/%d %H:%M')}\n "; f.write summaries.join("\n") }
+open('outputs/20170317_tys_runners.txt', 'w') { |f| f.puts "TH@NK YOU for SMILE 枠#{reward}\n集計期間: #{prev_time.strftime('%Y/%m/%d %H:%M')}〜#{current_time.strftime('%Y/%m/%d %H:%M')}\n "; f.write summaries.join("\n") }
 `convert -background white -fill black -font migu-1m-regular.ttf -pointsize 18 -interline-spacing 4 -kerning 0.5 label:@outputs/20170317_tys_runners.txt outputs/20170317_tys_runners.png`
 
 if prev_tweet
