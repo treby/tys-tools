@@ -138,7 +138,7 @@ if prev_tweet
   end
 
   media_ids = ['outputs/20170317_tys_best.png', 'outputs/20170317_tys_runners.png'].map do |media_path|
-    client.upload(File.new(media_path)).value
+    client.upload(File.new(media_path))
   end
   client.update "#{tweets.join("\n")}\nhttp://mlborder.com/misc/runners?event=tys", media_ids: media_ids.join(','), in_reply_to_status_id: prev_tweet
 end
