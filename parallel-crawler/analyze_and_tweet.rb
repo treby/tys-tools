@@ -48,7 +48,7 @@ rankings = target_ranks.each_with_object({}) do |rank, obj|
 end
 
 # 向こう崖が小さい / 大きい
-target_diffs = [5, 10, 15, 20, 25]
+target_diffs = [1, 5, 10, 15, 20]
 cliff_rankings = target_diffs.each_with_object({}) do |diff, obj|
   stats = idol_stats.map { |stats| { idol: stats[:idol], diff: stats[:diff].call(diff) } }
   obj[diff] = stats.sort_by { |stat| stat[:diff] }
