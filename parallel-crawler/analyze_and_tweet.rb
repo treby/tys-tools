@@ -90,10 +90,10 @@ summaries << "『TH@NK YOU for SMILE』 枠#{reward}"
 summaries << "集計期間: #{prev_time.strftime('%Y/%m/%d %H:%M')}〜#{current_time.strftime('%Y/%m/%d %H:%M')}"
 summaries << ''
 
-column_width = 35
+column_width = 37
 # アイドル横断ランキング(1, 150, 200, 254)
 summaries << '【アイドル横断ランキング】'
-summaries << target_ranks[1..-1].map { |rank| adjust_space("ランキング#{rank}位", column_width) }.join
+summaries << target_ranks[1..-1].map { |rank| adjust_space("#{rank}位ボーダー", column_width) }.join
 summaries += rankings.values.map do |ranking|
   ranking[0...20].map.with_index(1) do |record, rank|
     adjust_space("#{'%02d' % rank}位 #{record[:idol].name.shorten.ljust(4, '　')}: #{readable_unit(record[:point])}(+#{readable_unit(record[:velocity])})", column_width)
