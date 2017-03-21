@@ -57,11 +57,11 @@ idol_stats = idol_points.map do |idol_ranking_prev_ranking|
   }
 end
 
-# 500位までの合計ポイント
-total_500_ranking = idol_points.map do |idol_ranking_prev_ranking|
+# 枠数までの合計ポイント
+total_reward_ranking = idol_points.map do |idol_ranking_prev_ranking|
   idol, ranking, prev_ranking = idol_ranking_prev_ranking
-  current_total = ranking.sum
-  prev_total = prev_ranking.sum
+  current_total = ranking[0, reward - 1].sum
+  prev_total = prev_ranking[0, reward - 1].sum
   { idol: idol,
     current_total: current_total,
     prev_total: prev_total,
@@ -88,13 +88,13 @@ cliff_rankings = target_diffs.each_with_object({}) do |diff, obj|
   obj[diff] = stats.sort_by { |stat| stat[:diff] }
 end
 
-total_500_summaries = ["『TH@NK YOU for SMILE!!』 #{current_time.strftime('%Y/%m/%d %H:%M')}時点"]
-total_500_summaries << ''
-total_500_summaries << adjust_space("【上位500位合計ポイントランキング】", 40)
-total_500_summaries += total_500_ranking.map do |record|
+total_reward_summaries = ["『TH@NK YOU for SMILE!!』 #{current_time.strftime('%Y/%m/%d %H:%M')}時点"]
+total_reward_summaries << ''
+total_reward_summaries << adjust_space("【報酬獲得者合計ptランキング(〜#{reward}位)】", 42)
+total_reward_summaries += total_reward_ranking.sort_by { |r| r[:current_rank] }.map do |record|
   point_and_velocity = "#{readable_unit(record[:current_total])}(+#{readable_unit(record[:velocity])})"
   line = "#{'%02d' % record[:current_rank]}位 #{record[:idol].name.to_s.ljust(5, '　')}: #{point_and_velocity}"
-  adjust_space(line, 40)
+  adjust_space(line, 42)
 end
 
 best_1_ranking = rankings.delete(1)
@@ -109,7 +109,7 @@ best_1_summaries += best_1_ranking.map.with_index(1) do |record, rank|
 end
 
 filebase = 'outputs/20170317_tys_best'
-open("#{filebase}.txt", 'w') { |f| f.puts total_500_summaries.zip(best_1_summaries).map(&:join).join("\n") }
+open("#{filebase}.txt", 'w') { |f| f.puts total_reward_summaries.zip(best_1_summaries).map(&:join).join("\n") }
 `convert -background white -fill black -font migu-1m-regular.ttf -pointsize 18 -interline-spacing 4 -kerning 0.5 label:@#{filebase}.txt #{filebase}.png`
 
 summaries = []
