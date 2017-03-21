@@ -13,7 +13,7 @@ def readable_unit(number)
   digit_limit = 4
   num, unit = if digit < 10_000.to_s.length
                 [number, '']
-              elsif digit < 10_000_000_000.to_s.length
+              elsif digit < 100_000_000.to_s.length
                 [(number / 10_000.0).round(4), '万']
               else
                 [(number / 100_000_000.0).round(4), '億']
@@ -57,6 +57,23 @@ idol_stats = idol_points.map do |idol_ranking_prev_ranking|
   }
 end
 
+# 500位までの合計ポイント
+total_500_ranking = idol_points.map do |idol_ranking_prev_ranking|
+  idol, ranking, prev_ranking = idol_ranking_prev_ranking
+  current_total = ranking.sum
+  prev_total = prev_ranking.sum
+  { idol: idol,
+    current_total: current_total,
+    prev_total: prev_total,
+    velocity: current_total - prev_total
+  }
+end.sort_by{ |i| i[:current_total] }.reverse.map.with_index(1) do |total, rank|
+  total[:current_rank] = rank
+  total
+end.sort_by{ |i| i[:prev_total] }.reverse.each.with_index(1) do |total, rank|
+  total[:prev_rank] = rank
+end
+
 # ランキング
 target_ranks = [1, 150, 200, 254, 300]
 rankings = target_ranks.each_with_object({}) do |rank, obj|
@@ -71,18 +88,28 @@ cliff_rankings = target_diffs.each_with_object({}) do |diff, obj|
   obj[diff] = stats.sort_by { |stat| stat[:diff] }
 end
 
+total_500_summaries = ["『TH@NK YOU for SMILE!!』 #{current_time.strftime('%Y/%m/%d %H:%M')}時点"]
+total_500_summaries << ''
+total_500_summaries << adjust_space("【上位500位合計ポイントランキング】", 40)
+total_500_summaries += total_500_ranking.map do |record|
+  point_and_velocity = "#{readable_unit(record[:current_total])}(+#{readable_unit(record[:velocity])})"
+  line = "#{'%02d' % record[:current_rank]}位 #{record[:idol].name.to_s.ljust(5, '　')}: #{point_and_velocity}"
+  adjust_space(line, 40)
+end
+
 best_1_ranking = rankings.delete(1)
-best_1_summaries = []
-best_1_summaries << "アイドル横断全一ランキング(#{current_time.strftime('%Y/%m/%d %H:%M')})"
-best_1_summaries << " "
+best_1_summaries = ['']
+best_1_summaries << ''
+best_1_summaries << "【アイドル横断全一ランキング】"
 best_1_dictionary = best_rankers(current_and_prev_csv_files.first.sub('.csv', ''))
 best_1_summaries += best_1_ranking.map.with_index(1) do |record, rank|
-  point_and_velocity = "#{readable_unit(record[:point])}(+#{readable_unit(record[:velocity])})"
+  velocity = record[:velocity] > 0 ? "(+#{readable_unit(record[:velocity])})" : ''
+  point_and_velocity = "#{readable_unit(record[:point])}#{velocity}"
   "#{'%02d' % rank}位 #{record[:idol].name.to_s.ljust(5, '　')}: #{adjust_space(point_and_velocity, 18)} by #{best_1_dictionary[record[:idol].id]}"
 end
 
 filebase = 'outputs/20170317_tys_best'
-open("#{filebase}.txt", 'w') { |f| f.puts best_1_summaries.join("\n") }
+open("#{filebase}.txt", 'w') { |f| f.puts total_500_summaries.zip(best_1_summaries).map(&:join).join("\n") }
 `convert -background white -fill black -font migu-1m-regular.ttf -pointsize 18 -interline-spacing 4 -kerning 0.5 label:@#{filebase}.txt #{filebase}.png`
 
 summaries = []
@@ -112,7 +139,6 @@ summaries += cliff_rankings.values.map do |ranking|
 end.transpose.map(&:join)
 summaries << ''
 
-
 # 落差の大きさランキング → ボーダーが下がりやすい
 summaries << '[差が大きい]'
 summaries << target_diffs.map { |diff| adjust_space("+#{diff}(#{reward + diff}位)との差", 30) }.join
@@ -124,7 +150,7 @@ end.transpose.map(&:join)
 summaries << ''
 
 tweets = []
-tweets << "今回の注目アイドルは#{cliff_rankings[[5,10,15,20].sample(1).first][0...3].map { |cl| cl[:idol].name.shorten }.join('、')}です。"
+tweets << "現在の注目アイドルは#{cliff_rankings[[5,10,15,20].sample(1).first][0...3].map { |cl| cl[:idol].name.shorten }.join('、')}です。"
 
 open('outputs/20170317_tys_runners.txt', 'w') { |f| f.write summaries.join("\n") }
 `convert -background white -fill black -font migu-1m-regular.ttf -pointsize 18 -interline-spacing 4 -kerning 0.5 label:@outputs/20170317_tys_runners.txt outputs/20170317_tys_runners.png`
@@ -140,5 +166,6 @@ if prev_tweet
   media_ids = ['outputs/20170317_tys_best.png', 'outputs/20170317_tys_runners.png'].map do |media_path|
     client.upload(File.new(media_path))
   end
-  client.update "#{tweets.join("\n")}\nhttp://mlborder.com/misc/runners?event=tys", media_ids: media_ids.join(','), in_reply_to_status_id: prev_tweet
+  tweet = client.update "", media_ids: media_ids.first, in_reply_to_status_id: prev_tweet
+  client.update "#{tweets.join("\n")}\nhttp://mlborder.com/misc/runners?event=tys", media_ids: media_ids.last, in_reply_to_status_id: tweet.id
 end
