@@ -163,9 +163,8 @@ if prev_tweet
     config.access_token_secret = ENV['TWITTER_ACCESS_TOKEN_SECRET']
   end
 
-  media_ids = ['outputs/20170317_tys_best.png', 'outputs/20170317_tys_runners.png'].map do |media_path|
+  media_ids = ['outputs/20170317_tys_runners.png', 'outputs/20170317_tys_best.png'].map do |media_path|
     client.upload(File.new(media_path))
   end
-  tweet = client.update "", media_ids: media_ids.first, in_reply_to_status_id: prev_tweet
-  client.update "#{tweets.join("\n")}\nhttp://mlborder.com/misc/runners?event=tys", media_ids: media_ids.last, in_reply_to_status_id: tweet.id
+  client.update "#{tweets.join("\n")}\nhttp://mlborder.com/misc/runners?event=tys", media_ids: media_ids.join(','), in_reply_to_status_id: prev_tweet
 end
