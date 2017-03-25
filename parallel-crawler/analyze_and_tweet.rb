@@ -75,7 +75,7 @@ end.sort_by{ |i| i[:prev_total] }.reverse.each.with_index(1) do |total, rank|
 end
 
 # ランキング
-target_ranks = [1, 150, 200, 254, 300]
+target_ranks = [1, 250, 254, 275, 300]
 rankings = target_ranks.each_with_object({}) do |rank, obj|
   stats = idol_stats.map { |stats| { idol: stats[:idol], point: stats[:point_of].call(rank), velocity: stats[:velocity_of].call(rank) } }
   obj[rank] = stats.sort_by { |stat| stat[:point] }.reverse
