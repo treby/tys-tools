@@ -1,4 +1,6 @@
 .gree-account
 .twitter-secrets
+.influxdb-secrets
+.aws-secrets
 credential.json
 /parallel-crawler/outputs/*
