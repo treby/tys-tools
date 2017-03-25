@@ -123,7 +123,8 @@ summaries << '【アイドル横断ランキング】'
 summaries << target_ranks[1..-1].map { |rank| adjust_space("#{rank}位ボーダー", column_width) }.join
 summaries += rankings.values.map do |ranking|
   ranking[0...20].map.with_index(1) do |record, rank|
-    adjust_space("#{'%02d' % rank}位 #{record[:idol].name.shorten.ljust(4, '　')}: #{readable_unit(record[:point])}(+#{readable_unit(record[:velocity])})", column_width)
+    velocity = record[:velocity] > 0 ? "(+#{readable_unit(record[:velocity])})" : ''
+    adjust_space("#{'%02d' % rank}位 #{record[:idol].name.shorten.ljust(4, '　')}: #{readable_unit(record[:point])}#{velocity}", column_width)
   end
 end.transpose.map(&:join)
 summaries << ''
