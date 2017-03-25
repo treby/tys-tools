@@ -58,8 +58,6 @@ end
 
 series_name = '20170317-20170326_hhp'
 
-time = Time.now.strftime('%Y%m%d%H%M')
 maker = BorderCacheMaker.new(series_name, Time.parse('2017-03-17 12:00:00 +0900'), Time.parse('2017-03-26 23:59:59 +0900'))
 s3_client = Aws::S3::Client.new
-
-s3_client.put_object(bucket: 'mlborder', key: "events/#{series_name}/#{time}.json", body: maker.progress.to_json)
+s3_client.put_object(bucket: 'mlborder', key: "events/#{series_name}.json", body: maker.progress.to_json)
