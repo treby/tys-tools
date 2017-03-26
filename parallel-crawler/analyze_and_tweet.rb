@@ -75,7 +75,7 @@ end.sort_by{ |i| i[:prev_total] }.reverse.each.with_index(1) do |total, rank|
 end
 
 # ランキング
-target_ranks = [1, 250, 254, 275, 300]
+target_ranks = [1, 254, 275, 300, 500]
 rankings = target_ranks.each_with_object({}) do |rank, obj|
   stats = idol_stats.map { |stats| { idol: stats[:idol], point: stats[:point_of].call(rank), velocity: stats[:velocity_of].call(rank) } }
   obj[rank] = stats.sort_by { |stat| stat[:point] }.reverse
@@ -122,7 +122,7 @@ column_width = 37
 summaries << '【アイドル横断ランキング】'
 summaries << target_ranks[1..-1].map { |rank| adjust_space("#{rank}位ボーダー", column_width) }.join
 summaries += rankings.values.map do |ranking|
-  ranking[0...20].map.with_index(1) do |record, rank|
+  ranking[0...37].map.with_index(1) do |record, rank|
     velocity = record[:velocity] > 0 ? "(+#{readable_unit(record[:velocity])})" : ''
     adjust_space("#{'%02d' % rank}位 #{record[:idol].name.shorten.ljust(4, '　')}: #{readable_unit(record[:point])}#{velocity}", column_width)
   end
@@ -134,7 +134,7 @@ summaries << '【落差ランキング】'
 summaries << '[差が小さい]'
 summaries << target_diffs.map { |diff| adjust_space("+#{diff}(#{reward + diff}位)との差", 30) }.join
 summaries += cliff_rankings.values.map do |ranking|
-  ranking[0...5].map.with_index(1) do |record, rank|
+  ranking[0...10].map.with_index(1) do |record, rank|
     adjust_space("#{'%02d' % rank}位 #{record[:idol].name.to_s.ljust(5, '　')}: #{readable_unit(record[:diff])}", 30)
   end
 end.transpose.map(&:join)
@@ -144,14 +144,14 @@ summaries << ''
 summaries << '[差が大きい]'
 summaries << target_diffs.map { |diff| adjust_space("+#{diff}(#{reward + diff}位)との差", 30) }.join
 summaries += cliff_rankings.values.map do |ranking|
-  ranking.reverse[0...5].map.with_index(1) do |record, rank|
+  ranking.reverse[0...10].map.with_index(1) do |record, rank|
     adjust_space("#{'%02d' % rank}位 #{record[:idol].name.to_s.ljust(5, '　')}: #{readable_unit(record[:diff])}", 30)
   end
 end.transpose.map(&:join)
 summaries << ''
 
 tweets = []
-tweets << "現在の注目アイドルは#{cliff_rankings[[5,10,15,20].sample(1).first][0...3].map { |cl| cl[:idol].name.shorten }.join('、')}です。"
+tweets << "現在の注目アイドルは#{cliff_rankings[5][0...3].map { |cl| cl[:idol].name.shorten }.join('、')}です。"
 
 open('outputs/20170317_tys_runners.txt', 'w') { |f| f.write summaries.join("\n") }
 `convert -background white -fill black -font migu-1m-regular.ttf -pointsize 18 -interline-spacing 4 -kerning 0.5 label:@outputs/20170317_tys_runners.txt outputs/20170317_tys_runners.png`
